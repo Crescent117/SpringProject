@@ -19,6 +19,8 @@
   <b>Maven</b>
 
   <b>JSTL</b>
+
+  <b>Tomcat 9</b>
 </div>
 <br/>
 
