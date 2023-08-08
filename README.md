@@ -1,30 +1,29 @@
-### SpringProject
+# Spring Project
 
-
-### 개발기간
+## 개발기간
   - (2023.04.03 ~ 2023.05.02)
 
 
-### 프로젝트 주제
+## 프로젝트 주제
   - 스프링 프레임워크를 이용한 놀이공원 할인을 통한 예매권 구매 사이트
 
 <br/>
 <div style = "border:1px solid black">
 
-### 사용기술
+# 사용기술
 
   ## Front
   - <b>Javascript(jQuery)</b>
   - <b>HTML5<b/>
   - <b>CSS3<b/>
   
-
-<br/>
+  
   ## BackEnd
   - <b>JAVA 11</b>
   - <b>Spring FrameWork<b/>
   - <b>Mybatis</b>
   - <b>Lombok<b/>
+  
   
   ## DataBase
   - <b>Mysql 8</b>
