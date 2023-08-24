@@ -2,7 +2,9 @@
 
 ## 개발기간
   - (2023.04.03 ~ 2023.05.02)
-
+<br>
+## AWS EC2 Server
+http://3.38.232.104:8080/
 
 # 프로젝트 설명
 ## 이 프로젝트는?
@@ -62,15 +64,21 @@
   - 놀이기구 추가
 <br/>
 
+
 # 프로젝트 구조도
 ![image](https://github.com/Crescent117/SpringProject/assets/127200596/b1f1c98a-8c93-4c96-af0c-32260933470a)
 ![image](https://github.com/Crescent117/SpringProject/assets/127200596/7c9881f8-bd3a-4b68-b160-5d17a0609c47)
 
-
-
 # 데이터베이스 ERD
 ![image](https://github.com/Crescent117/SpringProject/assets/127200596/b96312b5-521d-4b52-9849-3800ec89627c)
 
+# 어려웠던 점
+- 글쓰기를 할 때 이미지를 여러개 올리되 클릭한 이미지는 서버에 올라가서는 안되는 로직을 짜야되는 상황이 있었습니다.
+  - 이 부분은 자료를 찾아 해결하고 코드를 리뷰해서 공부하는 방법으로 해결했습니다.
+  - javascript단에 multiple로 받은 이미지를 배열에 넣고 클릭하면 해당하는 이미지만 없애는 기능이었습니다.
+- AWS 서버에서 Tomcat을 시작할 때 미처 다 시작을 못한 상황에서 MySQL이 호출되는 문제가 있었습니다.
+  - 해결법으론 Context에서 "reloadable" 을 false로 바꿔서 재시작을 멈췄습니다.
+  - 그리고 AbandonedConnectionCleanupThread를 이용하여 MySQL 데이터베이스 연결 리소스를 정리하여 문제를 해결했습니다.
 
 # 진행하면서 아쉬웠던 점
 프로젝트를 진행하면서 크게 아쉬웠던 점을 꼽으라면 두가지가 있었습니다. 하나는 권한 분리를 제대로 하지 못해 관리자만의 기능을 웹으로 구현하지 못하고 직접 DB로 작업해줘야 한다는 것과
