@@ -47,14 +47,14 @@
 	<select id="getComment" parameterType="hashmap" resultType="hashmap">
 		<if test="commentPagingCheck == null">
 			<![CDATA[
-				select count(reply_num) as cnt from boardReply 
+				select count(reply_num) as cnt from boardreply 
 				where board_id = #{board_id};
 			]]>
 		</if>
 		
 		<if test="commentPagingCheck != null">
 			<![CDATA[
-				select board_id,member_id,b_reply,postdate,reply_num,ref,seq from boardReply 
+				select board_id,member_id,b_reply,postdate,reply_num,ref,seq from boardreply 
 				where board_id = #{board_id} order by ref limit ${start},${end}
 			]]>
 		</if>
@@ -77,7 +77,7 @@
 	
 	<select id="favoriteBoard" parameterType="hashmap" resultType="hashmap">
 		<![CDATA[
-			select board_id,member_id,favorite,hate from favoriteBoard where board_id=#{board_id} and member_id=#{member_id} 
+			select board_id,member_id,favorite,hate from favoriteboard where board_id=#{board_id} and member_id=#{member_id} 
 		]]>
 	</select>
 	
@@ -159,7 +159,7 @@
 	
 	<insert id="replyInsert" parameterType="hashmap" useGeneratedKeys="true" keyProperty="reply_num">
 		<![CDATA[
-			insert into boardReply(board_id,member_id,b_reply)
+			insert into boardreply(board_id,member_id,b_reply)
 			values(#{board_id},#{member_id},#{b_reply})
 		]]>
 			
@@ -171,14 +171,14 @@
 	    
 	      
 		<![CDATA[
-			insert into boardReply(board_id,member_id,b_reply,ref,seq)
+			insert into boardreply(board_id,member_id,b_reply,ref,seq)
 			values(#{board_id},#{member_id},#{b_reply},#{ref},#{seq}+1)
 		]]>
 				
 	</insert>
 	
 	<insert id="intsertFavoriteBoard" parameterType="hashmap">
-		<![CDATA[insert into favoriteBoard (board_id,member_id,favorite)]]>
+		<![CDATA[insert into favoriteboard (board_id,member_id,favorite)]]>
 		<if test="data == 1">
 			
 			values(#{board_id},#{member_id},#{data})
@@ -285,7 +285,7 @@
 	
 	<delete id="deleteFavoriteBoard">
 		<![CDATA[
-			delete from favoriteBoard where board_id=#{board_id} and member_id=#{member_id}
+			delete from favoriteboard where board_id=#{board_id} and member_id=#{member_id}
 		]]>
 	</delete>
 	
