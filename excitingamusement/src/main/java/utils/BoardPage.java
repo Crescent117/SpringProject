@@ -155,5 +155,44 @@ public class BoardPage {
 
 		return pagingStr;
 	}
+	
+	public static String AjaxCommentPaging(int totalCount, int pageSize, int blockPage,
+			int pageNum) {
+		String pagingStr = "";
+		System.out.println();
+
+		// �떒怨� 3 : �쟾泥� �럹�씠吏� �닔 怨꾩궛
+		int totalPages = (int) (Math.ceil(((double) totalCount / pageSize)));
+
+		// �떒怨� 4 : '�씠�쟾 �럹�씠吏� 釉붾줉 諛붾줈媛�湲�' 異쒕젰
+		int pageTemp = (((pageNum - 1) / blockPage) * blockPage) + 1;
+		if (pageTemp != 1) {
+			pagingStr += "<span class=page-item><a class=page-link  onclick='commentList("+pageTemp+")'><<</a></span>";
+			pagingStr += "&nbsp;";
+			pagingStr += "<span class=page-item><a class=page-link  onclick='commentList("+pageTemp+")'><</a></span>";
+		}
+
+		// �떒怨� 5 : 媛� �럹�씠吏� 踰덊샇 異쒕젰 
+		int blockCount = 1;
+		while (blockCount <= blockPage && pageTemp <= totalPages) {
+			if (pageTemp == pageNum) {
+				// �쁽�옱 �럹�씠吏��뒗 留곹겕瑜� 嫄몄� �븡�쓬
+				pagingStr += "&nbsp;<span class=page-item><a class=page-link  onclick='commentList("+pageTemp+")''><b style='color:black'>"+pageTemp+"</b></a></span>&nbsp;";
+			} else  {
+				pagingStr += "&nbsp;<span class=page-item><a class=page-link  onclick='commentList("+pageTemp+")''>"+pageTemp+"</a></span>&nbsp;";
+			}
+			pageTemp++;
+			blockCount++;
+		}
+
+		// �떒怨� 6 : '�떎�쓬 �럹�씠吏� 釉붾줉 諛붾줈媛�湲�' 異쒕젰
+		if (pageTemp <= totalPages) {
+			pagingStr += "<span class=page-item><a class=page-link  onclick='commentList("+pageTemp+")''>></a></span>";
+			pagingStr += "&nbsp;";
+			pagingStr += "<span class=page-item><a class=page-link  onclick='commentList("+pageTemp+")'>>></a></span>";
+		}
+
+		return pagingStr;
+	}
 
 }

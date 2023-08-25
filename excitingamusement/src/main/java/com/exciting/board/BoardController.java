@@ -2,15 +2,19 @@ package com.exciting.board;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,27 +35,39 @@ import utils.ChangeHtml;
 @Data
 @Log4j2
 public class BoardController {
-
-	private static final String BOARD_SAVE_PATH ="D:\\Kdigital\\spring\\springws\\.metadata\\.plugins\\org.eclipse.wst.server.core\\tmp0\\wtpwebapps\\ex01\\resources\\upload\\" ;
-	private static final String HOME_BOARD_SAVE_PATH ="C:\\Users\\MOON\\git\\repository2\\ex01\\src\\main\\webapp\\resources\\upload\\" ;
-	private static final String BOARD_LOAD_PATH ="/resources/upload/" ;
 	
 	@Autowired
 	BoardService service;
 	@Autowired
-	private ServletContext servletContext;
-
+	private static ServletContext servletContext;
+	
+	private static final String BOARD_SAVE_PATH = "/resources/upload/" ;
+	private static final String Home_BOARD_SAVE_PATH ="C:\\Users\\MOON\\git\\repository2\\ex01\\src\\main\\webapp\\resources\\upload\\" ;
+	private static final String BOARD_LOAD_PATH ="/resources/upload/" ;
 	
 	@RequestMapping(value = "/board/board", method = RequestMethod.GET)
 	public ModelAndView Board(@RequestParam Map<String,Object> map) {
 		ModelAndView mav =new ModelAndView();
 
 		BoardPage boardPage = new BoardPage();
+		//board.jsp에서 설정한 보이는 글 갯수가 없을시 기본적으로 10개가 보임
+		int viewCnt=10;
+		
+		//내가 한번에 볼 글갯수 받아옴
+		String cntCheck = String.valueOf(map.get("viewCnt"));
+		
+		//viewCnt가 null일시 viewCnt 초기값은 10
+		if(!(cntCheck.equals("null")) && !(cntCheck.equals(""))) {
+			if(Integer.parseInt(cntCheck)!=10) {
+				viewCnt= Integer.parseInt(String.valueOf(map.get("viewCnt")));
+			
+			}
+		}
 		
 		//paging 처리
 		Map<String,Object> res = service.boardCnt(map);
 		int totalCount = Integer.parseInt(res.get("cnt").toString());
-		int pageSize =10;
+		int pageSize =viewCnt;
 		int blockPage = 10;
 		int totalPage = (int)Math.ceil((double)totalCount / pageSize); // 전체 페이지 수
 		int pageNum = 1; // 바꿔가면서 테스트 1~10 =>1, 11~20 => 11
@@ -60,12 +76,13 @@ public class BoardController {
 			pageNum = Integer.parseInt(pageTemp);
 		int start = (pageNum - 1) * pageSize+1;  // 첫 게시물 번호
 		int start2 = start-1;
-		int end = pageNum * pageSize;
+		int end =viewCnt;
 		Map<String,Object> map2 = new HashMap<>();
 		map2.put("start", start2);
 		map2.put("end", end);
 		mav.setViewName("/board/Board");
 		mav.addObject("startend",map2);
+		
 
 
 		return mav;
@@ -73,14 +90,30 @@ public class BoardController {
 	
 	@RequestMapping(value = "/board/boardPaging", method = RequestMethod.GET)
 	@ResponseBody
-	public String BoardPaging(@RequestParam Map<String,Object> map) {
+	public String BoardPaging(@RequestParam Map<String,Object> map) throws UnsupportedEncodingException {
 		
 		BoardPage boardPage = new BoardPage();
 		
 		//검색페이징을 위한 데이터
+		//encoding 이거안쓰면 a태그로 넘어왔을시 한글이 깨짐
+		String search = URLEncoder.encode(String.valueOf(map.get("search")), "UTF-8");
 		String select = String.valueOf(map.get("select"));
-		String search = String.valueOf(map.get("search"));
 		String b_type = String.valueOf(map.get("b_type"));
+		//System.out.println("++++++++++++++++++++++++++++++++++"+search);
+		int viewCnt=10;
+		//System.out.println("lllllllllllllllllllllllllllllll"+map.get("viewCnt"));
+		String cntCheck = String.valueOf(map.get("viewCnt"));
+		//System.out.println("lllllllllllllllllllllllllllllll"+cntCheck);
+	
+		//viewCnt가 null일시 viewCnt 초기값은 10
+		if(!(cntCheck.equals("null"))) {
+			if(Integer.parseInt(cntCheck)!=10) {
+				viewCnt= Integer.parseInt(String.valueOf(map.get("viewCnt")));
+			
+			}
+		}
+		
+		System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++"+viewCnt);
 		
 		
 		//paging 처리
@@ -91,10 +124,12 @@ public class BoardController {
 		
 		//검색결과가 0이면 차단 아니면 페이징계산
 		if(boardListCnt !=0) {
+			
+			
 			int totalCount = Integer.parseInt(res.get("cnt").toString());
 //			System.out.println("*******************************"+totalCount);
 //			System.out.println("*******************************"+res.get("cnt"));
-			int pageSize =10;
+			int pageSize =viewCnt;
 			int blockPage = 10;
 			int totalPage = (int)Math.ceil((double)totalCount / pageSize); // 전체 페이지 수
 			int pageNum = 1; // 바꿔가면서 테스트 1~10 =>1, 11~20 => 11
@@ -102,13 +137,14 @@ public class BoardController {
 			if (pageTemp != "null" && !pageTemp.equals(""))
 				pageNum = Integer.parseInt(pageTemp);
 			int start = (pageNum - 1) * pageSize+1;  // 첫 게시물 번호
-			int end = pageNum * pageSize; // 마지막 게시물 번호
+			int end = viewCnt; // 마지막 게시물 번호
 			String paging = BoardPage.pagingStr(totalCount, pageSize, blockPage, pageNum, "/board/board",search,select,b_type);
 			int start2 = start-1;
-			
+		
 			
 			return paging;
 		}else {
+			//게시글아 하나도 없을시 반환
 			return "<span class=page-item>1</span>";
 		}
 		
@@ -121,6 +157,11 @@ public class BoardController {
 	@ResponseBody
 	public List<Map<String,Object>> BoardList(@RequestParam Map<String,Object> map) {
 		List<Map<String,Object>> boardList = service.boardList(map);
+//		System.out.println("qqqqqqqqqqqqqqqqqqqqqqqqq"+map.get("start"));
+//		System.out.println("qqqqqqqqqqqqqqqqqqqqqqqqq"+map.get("end"));
+//		System.out.println("qqqqqqqqqqqqqqqqqqqqqqqqq"+ boardList.size());
+		
+		
 		
 		//sql시간값 json으로 변환하기 위한 작업
 		for(Map<String,Object> map2:boardList) {
@@ -134,7 +175,6 @@ public class BoardController {
 			//
 			if(boardList.size()!=0) {
 				map2.put("postdate", postdate);
-				map2.put("cnt", boardList.size());
 			}
 		}
 		
@@ -148,7 +188,13 @@ public class BoardController {
 	public String reply_insert(@RequestParam Map<String,Object> map) {
 		String b_reply = ChangeHtml.change(String.valueOf(map.get("b_reply")));
 		map.put("b_reply", b_reply);
+		//mapper에서 if문으로 거르기 위한 임시 데이터
+		map.put("refcheck", '1');
+		//System.out.println("++++++++++444444444444"+map);
 		int rs =service.replyInsert(map);
+		//System.out.println("++++++++++444444444444"+map);
+		//System.out.println("---------------------------------------------------------"+map);
+		service.replyUpdate(map);
 //		System.out.println(rs);
 		return String.valueOf(rs);
 	}
@@ -160,25 +206,28 @@ public class BoardController {
 	
 
 	@RequestMapping(value = "/board/createBoard", method = RequestMethod.POST)
-	public String createBoardPost(@RequestParam Map<String,Object> map,Model model,@RequestParam(value="file",required = false) List<MultipartFile> mf) throws IOException {
+	public String createBoardPost(@RequestParam Map<String,Object> map,Model model,@RequestParam(value="file",required = false) List<MultipartFile> mf
+			,HttpServletRequest request) throws IOException {
+		
+		//이미지 처리를 위한 map
 		Map<String,Object> fi = new HashMap<>();
-		//System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"+mf);
-		
-		//특수문자 치환
 		
 		
+		
+		//insert하고 추가한 튜플의 board_id가져옴
 		service.boardInsert(map);
-		Map<String,Object> board_id = service.boardView(map);
+		
 		try {
 			if(mf.get(0).getOriginalFilename()!=null && !(mf.get(0).getOriginalFilename().equals(""))) {
 				
 				for(MultipartFile file:mf) {
 					String originalFileName = System.currentTimeMillis()+file.getOriginalFilename();
 	
-					String safeFile = HOME_BOARD_SAVE_PATH +originalFileName;
+					String uploadDir = request.getSession().getServletContext().getRealPath(BOARD_SAVE_PATH);
+					String safeFile = uploadDir+"/"+originalFileName;
 					
 					
-					fi.put("board_id", board_id.get("board_id"));
+					fi.put("board_id", map.get("board_id"));
 					fi.put("boardImg", originalFileName);		
 					service.boardImgInsert(fi);
 					file.transferTo(new File(safeFile));
@@ -201,6 +250,8 @@ public class BoardController {
 		BoardPage boardPage = new BoardPage();
 //		paging 처리
 		Map<String,Object> res = service.boardCnt(map);
+		
+		
 		int totalCount = Integer.parseInt(res.get("cnt").toString());
 		int pageSize =10;
 		int blockPage = 10;
@@ -210,8 +261,10 @@ public class BoardController {
 		if (pageTemp != "null" && !pageTemp.equals(""))
 			pageNum = Integer.parseInt(pageTemp);
 		int start = (pageNum - 1) * pageSize+1;  // 첫 게시물 번호
-		int end = pageNum * pageSize; // 마지막 게시물 번호
+		int end = 10; // 마지막 게시물 번호
 		int start2 = start-1;
+		
+		
 		Map<String,Object> map2 = new HashMap<>();
 		map2.put("start", start2);
 		map2.put("end", end);
@@ -222,6 +275,7 @@ public class BoardController {
 		
 		
 		Map<String,Object> boardReplyCnt = service.boardReplyCnt(map);
+		//조회수 업데이트
 		service.boardVisit(map);
 		Map<String,Object> boardView = service.boardView(map);
 		List<Map<String,Object>> boardImg = service.boardImgSelect(map);
@@ -317,20 +371,55 @@ public class BoardController {
 	@RequestMapping(value = "/board/replyList", method = RequestMethod.GET)
 	@ResponseBody
 	public List<Map<String,Object>> replyList(@RequestParam Map<String,Object> map) {
-
+		System.out.println("ajaxpagingCheck!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+map);
 		List<Map<String,Object>> list= service.getComment(map);
-		for(Map<String,Object> map2:list) {
-			String date = map2.get("postdate").toString();
-			String ymd=date.substring(0,10);
-			String ymd2=ymd.replaceAll("-",".");
-			String hms=date.substring(11);
-			String postdate=ymd2+" "+hms;
-			String b_reply = ChangeJavanontextarea.change(String.valueOf(map2.get("b_reply")));
-			map2.put("b_reply", b_reply);
-			map2.put("postdate", postdate);
-
-		}
-		System.out.println(list);
+		System.out.println("listCheck111111111111111111111111111111111111"+list);
+		int commentListCount = Integer.parseInt(String.valueOf(list.get(0).get("cnt")));
+		if(commentListCount != 0) {
+			
+			
+			int totalCount = commentListCount;
+//			System.out.println("*******************************"+totalCount);
+//			System.out.println("*******************************"+res.get("cnt"));
+			int pageSize =10;
+			int blockPage = 10;
+			int totalPage = (int)Math.ceil((double)totalCount / pageSize); // 전체 페이지 수
+			int pageNum = 1; // 바꿔가면서 테스트 1~10 =>1, 11~20 => 11
+			System.out.println("ajaxpagingCheck22222222222222222222!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			String pageTemp = String.valueOf(map.get("pageNum"));
+			if (pageTemp != "null" && !pageTemp.equals(""))
+				pageNum = Integer.parseInt(pageTemp);
+			int start = (pageNum - 1) * pageSize+1;  // 첫 게시물 번호
+			int end = 10; // 마지막 게시물 번호
+			String paging = BoardPage.AjaxCommentPaging(totalCount, pageSize, blockPage, pageNum);
+			int start2 = start-1;
+		
+			map.put("start",start2);
+			map.put("end",end);
+			
+			map.put("commentPagingCheck", "1");
+			
+			list= service.getComment(map);
+			
+			if(list.size()!=0) {
+				for(Map<String,Object> map2:list) {
+					String date = map2.get("postdate").toString();
+					String ymd=date.substring(0,10);
+					String ymd2=ymd.replaceAll("-",".");
+					String hms=date.substring(11);
+					String postdate=ymd2+" "+hms;
+					String b_reply = ChangeJavanontextarea.change(String.valueOf(map2.get("b_reply")));
+					map2.put("b_reply", b_reply);
+					map2.put("postdate", postdate);
+					
+		
+				}
+				list.get(0).put("paging",paging);
+			}
+		}		
+		
+	
+		//System.out.println(list);
 
 		return list;
 	}
@@ -353,14 +442,15 @@ public class BoardController {
 
 
 	@RequestMapping(value = "/board/updateBoard", method = RequestMethod.POST)
-	public ModelAndView updateBoardpost(@RequestParam Map<String,Object>map,@RequestParam(value="file",required = false) List<MultipartFile> mf){
+	public ModelAndView updateBoardpost(@RequestParam Map<String,Object>map,@RequestParam(value="file",required = false) List<MultipartFile> mf
+			,HttpServletRequest request){
 		ModelAndView mav = new ModelAndView();
 	
 		Map<String,Object> fi = new HashMap<>();
 
 		Map<String,Object> board_id = service.boardView(map);
 		
-		System.out.println("mf+++++++++++++++++++++++++++++++++++++++"+mf.get(0).getOriginalFilename());
+		//System.out.println("mf+++++++++++++++++++++++++++++++++++++++"+mf.get(0).getOriginalFilename());
 
 		
 		
@@ -371,7 +461,8 @@ public class BoardController {
 				for(MultipartFile file:mf) {
 					String originalFileName = System.currentTimeMillis()+file.getOriginalFilename();
 					//System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"+originalFileName);
-					String safeFile = HOME_BOARD_SAVE_PATH +originalFileName;
+					String uploadDir = request.getSession().getServletContext().getRealPath(BOARD_SAVE_PATH);
+					String safeFile = uploadDir+"/"+originalFileName;
 					fi.put("board_id", board_id.get("board_id"));
 					//System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"+safeFile);
 			
@@ -413,14 +504,14 @@ public class BoardController {
 	
 	@RequestMapping(value = "/board/deleteBoardImg", method = RequestMethod.POST)
 	@ResponseBody
-	public int deleteBoardImg(@RequestParam Map<String,Object>map){
+	public int deleteBoardImg(@RequestParam Map<String,Object>map,HttpServletRequest request){
 		System.out.println(map);
 		List<Map<String, Object>> img = service.boardImgSelect(map);
-		
+		System.out.println(img);
 		
 		for(Map<String,Object> rs : img) {
-			//System.out.println("11111111111111111111111111111111111111111"+rs.get("boardImg"));
-			File file =  new File(HOME_BOARD_SAVE_PATH+rs.get("boardImg"));
+			String uploadDir = request.getSession().getServletContext().getRealPath(BOARD_SAVE_PATH);
+			File file =  new File(uploadDir+"/"+rs.get("boardImg"));
 			if(file.exists()) { // 파일이 존재하면
 				file.delete(); // 파일 삭제	
 			}
@@ -435,9 +526,23 @@ public class BoardController {
 	
 	
 	@RequestMapping(value = "/board/deleteBoard", method = RequestMethod.GET)
-	public ModelAndView deleteBoard(@RequestParam Map<String,Object>map){
+	public ModelAndView deleteBoard(@RequestParam Map<String,Object>map,HttpServletRequest request){
 		ModelAndView mav = new ModelAndView();
+		
+		List<Map<String, Object>> img = service.boardImgSelect(map);
+		service.replyDelete(map);
+		for(Map<String,Object> rs : img) {
+			//System.out.println("11111111111111111111111111111111111111111"+rs.get("boardImg"));
+			String uploadDir = request.getSession().getServletContext().getRealPath(BOARD_SAVE_PATH);
+			File file =  new File(uploadDir+"/"+rs.get("boardImg"));
+			if(file.exists()) { // 파일이 존재하면
+				file.delete(); // 파일 삭제	
+			}
+		}
+		
+		service.deleteBoardImg(map);
 		service.deleteBoard(map); 
+		
 		mav.setViewName("redirect:/board/board");
 		return mav;
 	}
@@ -449,12 +554,22 @@ public class BoardController {
 		return rs;
 	}
 
-	@RequestMapping(value = "/board/replyUpdate", method = RequestMethod.GET)
+	@RequestMapping(value = "/board/replyUpdate", method = RequestMethod.POST)
 	@ResponseBody
-	public int replyUpdate(@RequestParam Map<String,Object>map){
+	public int replyUpdate(@RequestBody Map<String,Object> map){
+		System.out.println(map);
 		String b_reply = ChangeHtml.change(String.valueOf(map.get("b_reply")));
 		map.put("b_reply", b_reply);
 		int rs = service.replyUpdate(map); 
+		return rs;
+	}
+	
+	@RequestMapping(value = "/board/insertReReply", method = RequestMethod.POST)
+	@ResponseBody
+	public int reReplyUpdate(@RequestParam Map<String,Object>map){
+		String b_reply = ChangeHtml.change(String.valueOf(map.get("b_reply")));
+		map.put("b_reply", b_reply);
+		int rs = service.re_replyInsert(map); 
 		return rs;
 	}
 

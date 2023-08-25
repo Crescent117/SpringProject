@@ -254,8 +254,29 @@
 		cursor:pointer;
 	}
 	
-	.boardView-content{
-		width:1000px;
+	.paging{
+		width:100%;
+		text-align:center;
+		float:left;
+	}
+	
+	.commentPaging {
+		display:inline-block;
+	}	
+	
+	.commentPaging a {
+		display:block;
+		margin:0 3px;
+		float:left;
+		width:28px;
+		height:28px;
+		line-height:28px;
+		text-align:center;
+		background-color:#fff;
+		font-size:13px;
+		color:#999999;
+		text-decoration:none;
+		cursor:pointer;
 	}
 	
 	
@@ -297,10 +318,18 @@ $(document).ready(function() {
     	}
     });
     
+    
+    $('.page-link').on('click',() => {
+    	var commentListMove = document.getElementById('commentList');
+    	commentListMove.scrollIntoView({behavior:'smooth'});
+    	alert('1111111111111111');
+    });
+    
     $('#commentMove-top').on('click',() => {
     	var commentListMove = document.getElementById('commentList');
     	commentListMove.scrollIntoView({behavior:'smooth'});
     });
+    
     
     $('#commentHide').on('click',() => {
     	var commentListDisplay = document.getElementById('table');
@@ -315,6 +344,8 @@ $(document).ready(function() {
 	   
    
     });
+   
+  
    
     $('ul.tabs li').click(function(){
 
@@ -424,19 +455,24 @@ function commentInsert(){
 
 
 	
-function commentList(){
+function commentList(e){
+	console.log(e);
 	$.ajax({
 		type:'get',
 		url:'/board/replyList',
 		data:{
-			'board_id':"${boardView.board_id}" 
+			'board_id':"${boardView.board_id}",
+			'pageNum' : e
 		},success : function(data){
 			console.log(data);
 			tr='';
-			console.log(data.length);
+			paging = '';
+			console.log(data[0]['cnt']);
+			console.log('으아아아아아아아아아아아아');
 			var member_id ='${member_id}';
-			if(data.length!=0){
+			if(data[0]['cnt']!=0){
 				tr+="<table id='table'>";
+				paging = data[0]["paging"];
 				for(row of data){
 					var row_id = row.member_id;
 					tr+="<tbody>"
@@ -471,6 +507,7 @@ function commentList(){
 					tr+="</tbody>"
 				}
 				tr+="</table>";
+				$('.commentPaging').html(paging);
 				$('#table').html(tr);
 			}else{
 				$('#table').html(tr);
@@ -491,7 +528,7 @@ function comment_update(num,id,ref,seq){
 			tr+="<tr>";
 			tr+="<td style='width:20%;text-align:center'>"+id1+"</td>";
 			tr+="<td style='width:40%' colspan='4'>"
-			+'<textarea name="comment-update" class="comment-update" cols="" rows="4" style="width:80%;height:100px;padding: 10px 0 0 10px"></textarea>'
+			+'<textarea name="comment-update" class="comment-update" cols="" rows="4" style="width:80%;height:100px;padding: 10px 0 0 10px;resize:none"></textarea>'
 
 			+'<div id="emoticons" style="float:left; width:30%">'
 			+'이모티콘: <br><img onclick="emo(this);"'
@@ -515,6 +552,9 @@ function comment_update(num,id,ref,seq){
 			+'</div>'
 			+'<div style="clear:both;margin:0 0 30px 0">'
 			+'</div>'
+			tr+="</td>";
+			tr+="<td style='width:5%'></td>";
+			tr+="<td style='width:5%'></td>";
 			tr+="</tr>";
 		tr+="</thead>";
 		tr+="</table>";
@@ -534,12 +574,12 @@ console.log(seq)
 		$.ajax({
 			type:'post',
 			url:'/board/replyUpdate',
-			datatype:'json',
-			data:{
+			contentType: 'application/json',
+			data:JSON.stringify({
 				'ref':ref,
 				'seq':seq,
 				'b_reply':$('.comment-update').val()
-			},success : function(data){
+			}),success : function(data){
 				commentList()
 			}
 		
@@ -676,13 +716,20 @@ function favoriteEvent(rs){
 		
 }
 
+//답글입력창
 function re_reply(e,ref,seq){
+	//답글창 지우고 생성
+	//$(re_reply_append).empty();
+	
+	if(${member_id eq null}){
+		alert('로그인해주세요!');
+		location.href="/login";
+	}else{
 		const re_reply_append = e.parentNode.parentNode.parentNode;
-		console.log(re_reply_append);
 		tr="<tr style='background:#eee;width:1100px;' >";
 		tr+="<td style='width:20%;text-align:center'>${member_id}</td>";
 		tr+="<td style='width:40%' colspan='4'>"
-		+'<textarea name="comment-update" class="re_comment" cols="" rows="4" style="width:80%;height:100px;padding: 10px 0 0 10px"></textarea>'
+		+'<textarea name="comment-update" class="re_comment" cols="" rows="4" style="width:80%;height:100px;padding: 10px 0 0 10px;resize:none"></textarea>'
 
 		+'<div id="emoticons" style="float:left; width:30%">'
 		+'이모티콘: <br><img onclick="emo(this);"'
@@ -706,12 +753,17 @@ function re_reply(e,ref,seq){
 		+'</div>'
 		+'<div style="clear:both;margin:0 0 30px 0">'
 		+'</div>'
+		+'</td>';
+		tr+="<td style='width:5%'></td>";
+		tr+="<td style='width:5%'></td>";
 		tr+="</tr>";
 	
-$(re_reply_append).append(tr);
+		$(re_reply_append).append(tr);
+	}
 	
 }
 
+// 답글입력전송
 function comment_re_reply_commit(ref,seq){
 	if($('.re_comment').val()==''){
 		alert('빈 내용을 작성하실 수 없습니다');
@@ -763,7 +815,7 @@ function comment_re_reply_commit(ref,seq){
 			<c:forEach var="img" items="${boardImg }" >
 				<div class="image-wrap">
 					
-					<img alt="" src="${img.boardImg }" style="margin:20px 0; max-width:600px">
+					<img alt="" src="${img.boardImg }" style="margin:20px 0; max-width:800px">
 				</div>
 			</c:forEach>
 			
@@ -773,7 +825,7 @@ function comment_re_reply_commit(ref,seq){
 	
 			<br> 	
 			
-			<div class="boardView-content">${boardView.b_content }</div>
+			<div style="width:1050px; padding:0 0 0 10px">${boardView.b_content }</div>
 			
 			<!--추천 -->
 			<div class="favorite-wrap">
@@ -813,8 +865,12 @@ function comment_re_reply_commit(ref,seq){
 			</div>
 			<div id="commentform">
 				<table id='table'>
-				
+					<!-- 댓글 출력 -->
 				</table>
+				<div class="paging">
+				<span class="commentPaging"></span>
+					<!-- 페이징 출력 -->
+				</div>
 			</div>
 		</div>
 	</div>	

@@ -102,7 +102,9 @@ public class BoardDAO {
 		
 		return sql.delete("board.replyDelete",map);	
 	}
+	
 	public int replyUpdate(Map<String, Object> map){
+		System.out.println("+++++++++++++++++++++++++++"+map);
 		
 		return sql.update("board.replyUpdate",map);	
 	}
